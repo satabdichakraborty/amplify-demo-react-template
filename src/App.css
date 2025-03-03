@@ -54,6 +54,40 @@ div[class*="awsui-header"] {
   background-color: white !important;
 }
 
+/* Fix pagination background */
+div[class*="awsui-pagination"] {
+  background-color: white !important;
+}
+
+/* Fix pagination buttons */
+div[class*="awsui-pagination"] button {
+  background-color: white !important;
+  color: #0972d3 !important;
+}
+
+/* Fix pagination input */
+div[class*="awsui-pagination"] input {
+  background-color: white !important;
+}
+
+/* Fix any other dark elements */
+div[class*="awsui-button-dropdown"] {
+  background-color: white !important;
+}
+
+div[class*="awsui-select"] {
+  background-color: white !important;
+}
+
+div[class*="awsui-select-option"] {
+  background-color: white !important;
+  color: #333 !important;
+}
+
+div[class*="awsui-dropdown-status-text"] {
+  color: #333 !important;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

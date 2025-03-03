@@ -15,16 +15,26 @@ import {
   TextFilter,
   TopNavigation
 } from "@cloudscape-design/components";
+import { applyMode, Mode } from "@cloudscape-design/global-styles";
 import "@cloudscape-design/global-styles/index.css";
 import "./App.css";
 
+// Apply light mode to all Cloudscape components
+applyMode(Mode.Light);
+
 const client = generateClient<Schema>();
+
+// Define type for status option
+type StatusOption = {
+  label: string;
+  value: string;
+};
 
 function App() {
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(1);
   const [filterText, setFilterText] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState({ label: "All", value: "all" });
+  const [selectedStatus, setSelectedStatus] = useState<StatusOption>({ label: "All", value: "all" });
 
   useEffect(() => {
     client.models.Todo.observeQuery().subscribe({
@@ -60,7 +70,7 @@ function App() {
     return matchesText && matchesStatus;
   });
 
-  const statusOptions = [
+  const statusOptions: StatusOption[] = [
     { label: "All", value: "all" },
     { label: "Pending", value: "Pending" },
     { label: "In Progress", value: "In Progress" },
@@ -103,7 +113,9 @@ function App() {
                   />
                   <Select
                     selectedOption={selectedStatus}
-                    onChange={({ detail }) => setSelectedStatus(detail.selectedOption)}
+                    onChange={({ detail }) => 
+                      setSelectedStatus(detail.selectedOption as StatusOption)
+                    }
                     options={statusOptions}
                   />
                 </SpaceBetween>
@@ -128,9 +140,9 @@ function App() {
                       header: "Status",
                       cell: item => (
                         <Select
-                          selectedOption={{ label: item.status, value: item.status }}
+                          selectedOption={{ label: item.status || "Pending", value: item.status || "Pending" }}
                           onChange={({ detail }) => 
-                            updateTodoStatus(item.id, detail.selectedOption.value as string)
+                            updateTodoStatus(item.id, (detail.selectedOption as StatusOption).value)
                           }
                           options={statusOptions.filter(option => option.value !== 'all')}
                         />
