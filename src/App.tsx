@@ -5,48 +5,45 @@ import "./App.css";
 
 const client = generateClient<Schema>();
 
+// Define a type for our Todo items
+type TodoItem = {
+  id: string;
+  content: string;
+  status?: string;
+};
+
 function App() {
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
+  const [todos, setTodos] = useState<TodoItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Function to fetch todos
+  const fetchTodos = async () => {
+    try {
+      setIsLoading(true);
+      const response = await client.models.Todo.list();
+      
+      // Map the response to ensure all todos have a status
+      const todosWithStatus = response.data.map(todo => ({
+        ...todo,
+        status: todo.status || "Pending" // Provide a default status if it's null
+      }));
+      
+      setTodos(todosWithStatus);
+      setIsLoading(false);
+    } catch (err) {
+      console.error("Error fetching todos:", err);
+      setError("Error loading todos. Please refresh the page.");
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch todos on component mount
   useEffect(() => {
-    let subscription: any = null;
-    
-    const fetchTodos = async () => {
-      try {
-        // First, try to get all todos
-        const result = await client.models.Todo.list();
-        setTodos(result.data || []);
-        
-        // Then set up the subscription for real-time updates
-        subscription = client.models.Todo.observeQuery().subscribe({
-          next: (data) => {
-            setTodos(data?.items || []);
-            setIsLoading(false);
-          },
-          error: (err) => {
-            console.error("Error in subscription:", err);
-            setError("Error loading todos. Please refresh the page.");
-            setIsLoading(false);
-          }
-        });
-      } catch (err) {
-        console.error("Error fetching todos:", err);
-        setError("Error loading todos. Please refresh the page.");
-        setIsLoading(false);
-      }
-    };
-    
     fetchTodos();
-    
-    return () => {
-      if (subscription) {
-        subscription.unsubscribe();
-      }
-    };
   }, []);
 
+  // Create a new todo
   async function createTodo() {
     try {
       const content = window.prompt("Todo content");
@@ -55,6 +52,8 @@ function App() {
           content,
           status: "Pending" // Always provide a valid status
         });
+        // Fetch todos again to update the list
+        fetchTodos();
       }
     } catch (error) {
       console.error("Error creating todo:", error);
@@ -62,17 +61,35 @@ function App() {
     }
   }
 
+  // Update a todo
+  async function updateTodo(id: string, content: string) {
+    try {
+      await client.models.Todo.update({
+        id,
+        content,
+        status: "Pending" // Always use a valid status
+      });
+      // Fetch todos again to update the list
+      fetchTodos();
+    } catch (error) {
+      console.error("Error updating todo:", error);
+      setError("Error updating todo. Please try again.");
+    }
+  }
+
+  // Delete a todo
   async function deleteTodo(id: string) {
     try {
-      if (id) {
-        await client.models.Todo.delete({ id });
-      }
+      await client.models.Todo.delete({ id });
+      // Fetch todos again to update the list
+      fetchTodos();
     } catch (error) {
       console.error("Error deleting todo:", error);
       setError("Error deleting todo. Please try again.");
     }
   }
 
+  // Show error state if there's an error
   if (error) {
     return (
       <div className="app-container">
@@ -113,21 +130,10 @@ function App() {
                   <button 
                     className="edit-button"
                     onClick={() => {
-                      if (todo?.id) {
-                        const currentContent = todo.content || "";
-                        const newContent = window.prompt("Update todo content", currentContent);
-                        if (newContent) {
-                          try {
-                            client.models.Todo.update({
-                              id: todo.id,
-                              content: newContent,
-                              status: "Pending" // Always use a valid status
-                            });
-                          } catch (error) {
-                            console.error("Error updating todo:", error);
-                            setError("Error updating todo. Please try again.");
-                          }
-                        }
+                      const currentContent = todo.content || "";
+                      const newContent = window.prompt("Update todo content", currentContent);
+                      if (newContent && todo.id) {
+                        updateTodo(todo.id, newContent);
                       }
                     }}
                   >
