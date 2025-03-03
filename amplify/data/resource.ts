@@ -10,7 +10,7 @@ const schema = a.schema({
   Todo: a
     .model({
       content: a.string(),
-      status: a.string().required().default("Pending"),
+      status: a.string().optional(),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 });

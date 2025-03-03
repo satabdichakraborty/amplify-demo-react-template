@@ -126,6 +126,24 @@ button:hover {
   color: #666;
 }
 
+/* Error state */
+.error-state {
+  text-align: center;
+  padding: 40px 0;
+  color: #d91515;
+}
+
+.error-state p {
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.error-state button {
+  background-color: #d91515;
+  color: white;
+  border: none;
+}
+
 /* Root container */
 #root {
   height: 100vh;
