@@ -1,267 +1,115 @@
 import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
-import {
-  AppLayout,
-  Box,
-  Button,
-  Container,
-  ContentLayout,
-  Header,
-  Modal,
-  Pagination,
-  SpaceBetween,
-  Table,
-  TextFilter,
-  TopNavigation,
-  Input,
-} from "@cloudscape-design/components";
-import { applyMode, Mode } from "@cloudscape-design/global-styles";
-import "@cloudscape-design/global-styles/index.css";
 import "./App.css";
-
-// Apply light mode to all Cloudscape components
-applyMode(Mode.Light);
 
 const client = generateClient<Schema>();
 
 function App() {
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
-  const [currentPageIndex, setCurrentPageIndex] = useState(1);
-  const [filterText, setFilterText] = useState("");
-  const [isCreateModalVisible, setCreateModalVisible] = useState(false);
-  const [isEditModalVisible, setEditModalVisible] = useState(false);
-  const [newTodoContent, setNewTodoContent] = useState("");
-  const [editingTodo, setEditingTodo] = useState<{
-    id: string;
-    content: string;
-  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
-    });
+    try {
+      const subscription = client.models.Todo.observeQuery().subscribe({
+        next: (data) => {
+          setTodos(data?.items || []);
+          setIsLoading(false);
+        },
+        error: (error) => {
+          console.error("Error fetching todos:", error);
+          setIsLoading(false);
+        }
+      });
+      
+      return () => {
+        subscription.unsubscribe();
+      };
+    } catch (error) {
+      console.error("Error setting up subscription:", error);
+      setIsLoading(false);
+    }
   }, []);
 
   async function createTodo() {
-    if (newTodoContent.trim()) {
-      await client.models.Todo.create({
-        content: newTodoContent,
-        status: "",
-      });
-      setNewTodoContent("");
-      setCreateModalVisible(false);
+    try {
+      const content = window.prompt("Todo content");
+      if (content) {
+        await client.models.Todo.create({ 
+          content,
+          status: "" // Provide an empty string for the status field
+        });
+      }
+    } catch (error) {
+      console.error("Error creating todo:", error);
     }
   }
 
-  async function updateTodo() {
-    if (editingTodo && editingTodo.content.trim()) {
-      await client.models.Todo.update({
-        id: editingTodo.id,
-        content: editingTodo.content,
-        status: "",
-      });
-      setEditingTodo(null);
-      setEditModalVisible(false);
+  async function deleteTodo(id: string) {
+    try {
+      if (id) {
+        await client.models.Todo.delete({ id });
+      }
+    } catch (error) {
+      console.error("Error deleting todo:", error);
     }
   }
-
-  function deleteTodo(id: string) {
-    client.models.Todo.delete({ id });
-  }
-
-  // Filter todos based on search text
-  const filteredTodos = todos.filter((todo) =>
-    todo.content?.toLowerCase().includes(filterText.toLowerCase())
-  );
 
   return (
-    <div style={{ backgroundColor: "white", minHeight: "100vh" }}>
-      <TopNavigation
-        identity={{
-          href: "#",
-          title: "Todo App",
-        }}
-        utilities={[]}
-      />
-
-      {/* Create Todo Modal */}
-      <Modal
-        visible={isCreateModalVisible}
-        onDismiss={() => setCreateModalVisible(false)}
-        header="Create New Todo"
-        footer={
-          <Box float="right">
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button
-                variant="link"
-                onClick={() => setCreateModalVisible(false)}
-              >
-                Cancel
-              </Button>
-              <Button variant="primary" onClick={createTodo}>
-                Create
-              </Button>
-            </SpaceBetween>
-          </Box>
-        }
-      >
-        <Input
-          value={newTodoContent}
-          onChange={({ detail }) => setNewTodoContent(detail.value)}
-          placeholder="Enter todo content"
-        />
-      </Modal>
-
-      {/* Edit Todo Modal */}
-      <Modal
-        visible={isEditModalVisible}
-        onDismiss={() => {
-          setEditModalVisible(false);
-          setEditingTodo(null);
-        }}
-        header="Edit Todo"
-        footer={
-          <Box float="right">
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button
-                variant="link"
-                onClick={() => {
-                  setEditModalVisible(false);
-                  setEditingTodo(null);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button variant="primary" onClick={updateTodo}>
-                Save
-              </Button>
-            </SpaceBetween>
-          </Box>
-        }
-      >
-        <Input
-          value={editingTodo?.content || ""}
-          onChange={({ detail }) =>
-            setEditingTodo((prev) =>
-              prev ? { ...prev, content: detail.value } : null
-            )
-          }
-          placeholder="Enter updated content"
-        />
-      </Modal>
-
-      <AppLayout
-        content={
-          <ContentLayout
-            header={
-              <Header
-                variant="h1"
-                actions={
-                  <Button
-                    variant="primary"
-                    onClick={() => setCreateModalVisible(true)}
+    <div className="app-container">
+      <header className="app-header">
+        <h1>Todo App</h1>
+        <button className="add-button" onClick={createTodo}>Add Todo</button>
+      </header>
+      
+      <main className="app-content">
+        {isLoading ? (
+          <p>Loading todos...</p>
+        ) : todos.length === 0 ? (
+          <div className="empty-state">
+            <p>No todos yet. Create one to get started!</p>
+            <button onClick={createTodo}>Add Todo</button>
+          </div>
+        ) : (
+          <ul className="todo-list">
+            {todos.map(todo => (
+              <li key={todo.id} className="todo-item">
+                <span className="todo-content">{todo.content}</span>
+                <div className="todo-actions">
+                  <button 
+                    className="edit-button"
+                    onClick={() => {
+                      if (todo?.id) {
+                        const currentContent = todo.content || "";
+                        const newContent = window.prompt("Update todo content", currentContent);
+                        if (newContent) {
+                          try {
+                            client.models.Todo.update({
+                              id: todo.id,
+                              content: newContent,
+                              status: todo.status || ""
+                            });
+                          } catch (error) {
+                            console.error("Error updating todo:", error);
+                          }
+                        }
+                      }
+                    }}
                   >
-                    Add Item
-                  </Button>
-                }
-              >
-                Todo Items ({todos.length})
-              </Header>
-            }
-          >
-            <Container>
-              <SpaceBetween size="l">
-                <TextFilter
-                  filteringText={filterText}
-                  filteringPlaceholder="Find todo"
-                  onChange={({ detail }) => setFilterText(detail.filteringText)}
-                />
-
-                <Table
-                  columnDefinitions={[
-                    {
-                      id: "id",
-                      header: "ID",
-                      cell: (item) => item.id.substring(0, 8) + "...",
-                      sortingField: "id",
-                      width: 150,
-                    },
-                    {
-                      id: "content",
-                      header: "Content",
-                      cell: (item) => (
-                        <div className="content-cell">{item.content}</div>
-                      ),
-                      sortingField: "content",
-                      width: 400,
-                    },
-                    {
-                      id: "actions",
-                      header: "Actions",
-                      cell: (item) => (
-                        <div className="action-buttons-container">
-                          <SpaceBetween direction="horizontal" size="xs">
-                            <Button
-                              variant="normal"
-                              onClick={() => {
-                                setEditingTodo({
-                                  id: item.id,
-                                  content: item.content || "",
-                                });
-                                setEditModalVisible(true);
-                              }}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              variant="primary"
-                              onClick={() => deleteTodo(item.id)}
-                            >
-                              Delete
-                            </Button>
-                          </SpaceBetween>
-                        </div>
-                      ),
-                      width: 250,
-                    },
-                  ]}
-                  items={filteredTodos}
-                  loadingText="Loading todos"
-                  selectionType="single"
-                  trackBy="id"
-                  empty={
-                    <Box textAlign="center" color="inherit">
-                      <b>No todos</b>
-                      <Box
-                        padding={{ bottom: "s" }}
-                        variant="p"
-                        color="inherit"
-                      >
-                        No todos to display.
-                      </Box>
-                      <Button onClick={() => setCreateModalVisible(true)}>
-                        Add todo
-                      </Button>
-                    </Box>
-                  }
-                  header={<Header>Todo Items</Header>}
-                />
-
-                <Pagination
-                  currentPageIndex={currentPageIndex}
-                  onChange={({ detail }) =>
-                    setCurrentPageIndex(detail.currentPageIndex)
-                  }
-                  pagesCount={Math.max(1, Math.ceil(filteredTodos.length / 10))}
-                />
-              </SpaceBetween>
-            </Container>
-          </ContentLayout>
-        }
-        navigationHide
-        toolsHide
-      />
+                    Edit
+                  </button>
+                  <button 
+                    className="delete-button"
+                    onClick={() => todo.id && deleteTodo(todo.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
     </div>
   );
 }
