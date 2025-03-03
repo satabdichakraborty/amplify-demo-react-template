@@ -9,7 +9,6 @@ import {
   ContentLayout,
   Header,
   Pagination,
-  Select,
   SpaceBetween,
   Table,
   TextFilter,
@@ -24,17 +23,10 @@ applyMode(Mode.Light);
 
 const client = generateClient<Schema>();
 
-// Define type for status option
-type StatusOption = {
-  label: string;
-  value: string;
-};
-
 function App() {
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(1);
   const [filterText, setFilterText] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState<StatusOption>({ label: "All", value: "all" });
 
   useEffect(() => {
     client.models.Todo.observeQuery().subscribe({
@@ -46,8 +38,7 @@ function App() {
     const content = window.prompt("Todo content");
     if (content) {
       client.models.Todo.create({ 
-        content,
-        status: "Pending" 
+        content
       });
     }
   }
@@ -56,26 +47,10 @@ function App() {
     client.models.Todo.delete({ id });
   }
 
-  function updateTodoStatus(id: string, status: string) {
-    client.models.Todo.update({
-      id,
-      status
-    });
-  }
-
-  // Filter todos based on search text and selected status
-  const filteredTodos = todos.filter(todo => {
-    const matchesText = todo.content?.toLowerCase().includes(filterText.toLowerCase());
-    const matchesStatus = selectedStatus.value === 'all' || todo.status === selectedStatus.value;
-    return matchesText && matchesStatus;
-  });
-
-  const statusOptions: StatusOption[] = [
-    { label: "All", value: "all" },
-    { label: "Pending", value: "Pending" },
-    { label: "In Progress", value: "In Progress" },
-    { label: "Completed", value: "Completed" }
-  ];
+  // Filter todos based on search text
+  const filteredTodos = todos.filter(todo => 
+    todo.content?.toLowerCase().includes(filterText.toLowerCase())
+  );
 
   return (
     <div style={{ backgroundColor: "white", minHeight: "100vh" }}>
@@ -105,20 +80,11 @@ function App() {
           >
             <Container>
               <SpaceBetween size="l">
-                <SpaceBetween direction="horizontal" size="s">
-                  <TextFilter
-                    filteringText={filterText}
-                    filteringPlaceholder="Find todo"
-                    onChange={({ detail }) => setFilterText(detail.filteringText)}
-                  />
-                  <Select
-                    selectedOption={selectedStatus}
-                    onChange={({ detail }) => 
-                      setSelectedStatus(detail.selectedOption as StatusOption)
-                    }
-                    options={statusOptions}
-                  />
-                </SpaceBetween>
+                <TextFilter
+                  filteringText={filterText}
+                  filteringPlaceholder="Find todo"
+                  onChange={({ detail }) => setFilterText(detail.filteringText)}
+                />
                 
                 <Table
                   columnDefinitions={[
@@ -134,20 +100,6 @@ function App() {
                       header: "Content",
                       cell: item => item.content,
                       sortingField: "content"
-                    },
-                    {
-                      id: "status",
-                      header: "Status",
-                      cell: item => (
-                        <Select
-                          selectedOption={{ label: item.status || "Pending", value: item.status || "Pending" }}
-                          onChange={({ detail }) => 
-                            updateTodoStatus(item.id, (detail.selectedOption as StatusOption).value)
-                          }
-                          options={statusOptions.filter(option => option.value !== 'all')}
-                        />
-                      ),
-                      width: 200
                     },
                     {
                       id: "actions",
