@@ -37,7 +37,7 @@ function App() {
       if (content) {
         await client.models.Todo.create({ 
           content,
-          status: "" // Provide an empty string for the status field
+          status: "Pending" // Always provide a valid status
         });
       }
     } catch (error) {
@@ -87,7 +87,7 @@ function App() {
                             client.models.Todo.update({
                               id: todo.id,
                               content: newContent,
-                              status: todo.status || ""
+                              status: todo.status || "Pending" // Always provide a valid status
                             });
                           } catch (error) {
                             console.error("Error updating todo:", error);
