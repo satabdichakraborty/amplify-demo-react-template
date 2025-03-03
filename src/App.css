@@ -123,3 +123,22 @@ div[class*="awsui-dropdown-status-text"] {
 .read-the-docs {
   color: #888;
 }
+
+/* Custom styles for action buttons */
+div[class*="awsui-button"] {
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Add hover effect to buttons */
+div[class*="awsui-button"]:hover {
+  transform: translateY(-1px);
+  transition: transform 0.2s;
+}
+
+/* Style for the action column */
+.action-buttons-container {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+}

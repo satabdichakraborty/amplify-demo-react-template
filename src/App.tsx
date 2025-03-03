@@ -153,14 +153,33 @@ function App() {
                       id: "actions",
                       header: "Actions",
                       cell: item => (
-                        <Button 
-                          variant="link" 
-                          onClick={() => deleteTodo(item.id)}
-                        >
-                          Delete
-                        </Button>
+                        <div className="action-buttons-container">
+                          <SpaceBetween direction="horizontal" size="xs">
+                            <Button 
+                              variant="normal" 
+                              onClick={() => {
+                                const currentContent = item.content || "";
+                                const newContent = window.prompt("Update todo content", currentContent);
+                                if (newContent) {
+                                  client.models.Todo.update({
+                                    id: item.id,
+                                    content: newContent
+                                  });
+                                }
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            <Button 
+                              variant="primary" 
+                              onClick={() => deleteTodo(item.id)}
+                            >
+                              Delete
+                            </Button>
+                          </SpaceBetween>
+                        </div>
                       ),
-                      width: 100
+                      width: 200
                     }
                   ]}
                   items={filteredTodos}
