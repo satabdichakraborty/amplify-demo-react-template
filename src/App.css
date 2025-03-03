@@ -142,3 +142,12 @@ div[class*="awsui-button"]:hover {
   justify-content: space-around;
   width: 100%;
 }
+
+/* Style for the content column */
+.content-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+  padding: 8px;
+}

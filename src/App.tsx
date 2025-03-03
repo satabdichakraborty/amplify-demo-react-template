@@ -38,7 +38,8 @@ function App() {
     const content = window.prompt("Todo content");
     if (content) {
       client.models.Todo.create({ 
-        content
+        content,
+        status: "" // Provide an empty string for the status field
       });
     }
   }
@@ -93,13 +94,14 @@ function App() {
                       header: "ID",
                       cell: item => item.id.substring(0, 8) + "...",
                       sortingField: "id",
-                      width: 120
+                      width: 150
                     },
                     {
                       id: "content",
                       header: "Content",
-                      cell: item => item.content,
-                      sortingField: "content"
+                      cell: item => <div className="content-cell">{item.content}</div>,
+                      sortingField: "content",
+                      width: 400
                     },
                     {
                       id: "actions",
@@ -115,7 +117,8 @@ function App() {
                                 if (newContent) {
                                   client.models.Todo.update({
                                     id: item.id,
-                                    content: newContent
+                                    content: newContent,
+                                    status: item.status || "" // Preserve the status field
                                   });
                                 }
                               }}
@@ -131,7 +134,7 @@ function App() {
                           </SpaceBetween>
                         </div>
                       ),
-                      width: 200
+                      width: 250
                     }
                   ]}
                   items={filteredTodos}
