@@ -32,6 +32,21 @@ body {
 /* Override Cloudscape styles for white background */
 :root {
   --app-background-color: white;
+  --color-background-container-content: white !important;
+  --color-background-container-header: white !important;
+  --color-background-dropdown-item-hover: #f2f8fd !important;
+  --color-background-dropdown-item-selected: #e5f2ff !important;
+  --color-background-home-header: white !important;
+  --color-background-layout-main: white !important;
+  --color-background-layout-panels: white !important;
+  --color-background-layout-toggle-hover: #f2f8fd !important;
+  --color-background-layout-toggle-selected: #e5f2ff !important;
+  --color-background-layout-toggle-selected-hover: #d5e9ff !important;
+  --color-background-modal-overlay: rgba(255, 255, 255, 0.7) !important;
+  --color-background-notification-blue: #f2f8fd !important;
+  --color-background-notification-green: #f2fcf3 !important;
+  --color-background-notification-red: #fff5f5 !important;
+  --color-background-notification-yellow: #fffdf2 !important;
 }
 
 /* Make sure the app container has a white background */
@@ -57,6 +72,7 @@ div[class*="awsui-header"] {
 /* Fix pagination background */
 div[class*="awsui-pagination"] {
   background-color: white !important;
+  color: #333 !important;
 }
 
 /* Fix pagination buttons */
@@ -67,6 +83,12 @@ div[class*="awsui-pagination"] button {
 
 /* Fix pagination input */
 div[class*="awsui-pagination"] input {
+  background-color: white !important;
+  color: #333 !important;
+}
+
+/* Fix pagination dropdown */
+div[class*="awsui-pagination"] div[class*="awsui-select"] {
   background-color: white !important;
 }
 
@@ -86,6 +108,34 @@ div[class*="awsui-select-option"] {
 
 div[class*="awsui-dropdown-status-text"] {
   color: #333 !important;
+}
+
+/* Style for the content column */
+.content-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+  padding: 8px;
+}
+
+/* Custom styles for action buttons */
+div[class*="awsui-button"] {
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Add hover effect to buttons */
+div[class*="awsui-button"]:hover {
+  transform: translateY(-1px);
+  transition: transform 0.2s;
+}
+
+/* Style for the action column */
+.action-buttons-container {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
 }
 
 .logo {
@@ -122,32 +172,4 @@ div[class*="awsui-dropdown-status-text"] {
 
 .read-the-docs {
   color: #888;
-}
-
-/* Custom styles for action buttons */
-div[class*="awsui-button"] {
-  min-width: 80px;
-  text-align: center;
-}
-
-/* Add hover effect to buttons */
-div[class*="awsui-button"]:hover {
-  transform: translateY(-1px);
-  transition: transform 0.2s;
-}
-
-/* Style for the action column */
-.action-buttons-container {
-  display: flex;
-  justify-content: space-around;
-  width: 100%;
-}
-
-/* Style for the content column */
-.content-cell {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 400px;
-  padding: 8px;
 }
